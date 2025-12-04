@@ -1,11 +1,122 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  loans     Loan[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Book {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String?
+  isbn        String?       @unique
+  publisher   String?
+  year        Int?
+  copies      BookCopy[]
+  categories  BookCategory[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([title])
+}
+
+model Author {
+  id        Int      @id @default(autoincrement())
+  name      String
+  bio       String?
+  books     BookAuthor[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BookAuthor {
+  id       Int    @id @default(autoincrement())
+  book     Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  bookId   Int
+  author   Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId Int
+
+  @@unique([bookId, authorId])
+}
+
+model Category {
+  id        Int            @id @default(autoincrement())
+  name      String         @unique
+  books     BookCategory[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model BookCategory {
+  id         Int      @id @default(autoincrement())
+  book       Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  bookId     Int
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId Int
+
+  @@unique([bookId, categoryId])
+}
+
+model BookCopy {
+  id        Int       @id @default(autoincrement())
+  book      Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  bookId    Int
+  barcode   String    @unique
+  status    CopyStatus @default(AVAILABLE)
+  loans     Loan[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([barcode])
+}
+
+enum CopyStatus {
+  AVAILABLE
+  BORROWED
+  LOST
+  MAINTENANCE
+}
+
+model Loan {
+  id         Int       @id @default(autoincrement())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  bookCopy   BookCopy  @relation(fields: [bookCopyId], references: [id], onDelete: Restrict)
+  bookCopyId Int
+  borrowedAt DateTime  @default(now())
+  dueDate    DateTime
+  returnedAt DateTime?
+  status     LoanStatus @default(ONGOING)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([bookCopyId])
+}
+
+enum LoanStatus {
+  ONGOING
+  RETURNED
+  LATE
+  CANCELED
 }
