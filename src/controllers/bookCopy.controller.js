@@ -2,19 +2,18 @@ import prisma from '../config/database.js';
 import { buildSuccessResponse } from '../utils/response.util.js'; 
 import { buildQueryOptions } from '../utils/queryBuilder.js'; 
 import { buildPaginationMeta } from '../utils/pagination.util.js'; 
-import { ConnectOrCreate } from '../utils/mapname.util.js';
 
-const bookInclude = {
-    authors: { include: { author: { select: { id: true, name: true } } } },
-    categories: { include: { category: { select: { id: true, name: true } } } },
+const copyInclude = {
+    book: { select: { id: true, title: true, isbn: true } },
+    loans: { take: 1, orderBy: { borrowedAt: 'desc' } }
 };
 
-export const getBooks = async (req, res, next) => {
+export const getCopies = async (req, res, next) => {
     
-    const allowedFilters = ['year', 'publisher']; 
-    const searchFields = ['title', 'description']; 
+    // 1. Dapatkan opsi query
+    const allowedFilters = ['status', 'bookId']; 
+    const searchFields = ['barcode']; 
     
-    // 1. Dapatkan opsi query (skip, take, where, orderBy)
     const { skip, take, paginationMeta, where, orderBy } = buildQueryOptions(
         req, 
         allowedFilters, 
@@ -22,15 +21,15 @@ export const getBooks = async (req, res, next) => {
     );
     
     // 2. Dapatkan total records 
-    const totalRecords = await prisma.book.count({ where });
+    const totalRecords = await prisma.bookCopy.count({ where });
 
-    // 3. Dapatkan data buku
-    const books = await prisma.book.findMany({
+    // 3. Dapatkan data Copies
+    const copies = await prisma.bookCopy.findMany({
         skip,
         take,
         where,
         orderBy,
-        include: bookInclude,
+        include: copyInclude,
     });
 
     // 4. Buat objek pagination metadata
@@ -42,122 +41,85 @@ export const getBooks = async (req, res, next) => {
 
     // 5. Respon Sukses
     return res.json(buildSuccessResponse(
-        "Books fetched successfully with pagination", 
-        books,
+        "Book copies fetched successfully", 
+        copies,
         pagination 
     ));
 };
 
-export const getBook = async (req, res, next) => {
+export const getCopy = async (req, res, next) => {
     const id = parseInt(req.params.id);
 
-    const book = await prisma.book.findUnique({
+    const copy = await prisma.bookCopy.findUnique({
         where: { id },
-        include: {
-            ...bookInclude,
-            copies: true,
-        },
+        include: copyInclude,
+    });
+
+    if (!copy) {
+        return res.status(404).json({ 
+            success: false, 
+            message: "Book copy not found" 
+        });
+    }
+
+    return res.json(buildSuccessResponse(
+        "Book copy fetched successfully", 
+        copy
+    ));
+};
+
+export const createCopy = async (req, res, next) => {
+    const { bookId, barcode } = req.body; 
+
+    const book = await prisma.book.findUnique({
+        where: { id: bookId },
     });
 
     if (!book) {
         return res.status(404).json({ 
             success: false, 
-            message: "Book not found" 
+            message: "Parent book not found" 
         });
     }
 
-    return res.json(buildSuccessResponse(
-        "Book fetched successfully", 
-        book
-    ));
-};
-
-export const createBook = async (req, res, next) => {
-    const data = req.body; 
-
-    const authorCreationData = ConnectOrCreate(data.authorNames, 'author');
-    const categoryCreationData = ConnectOrCreate(data.categoryNames, 'category');
-
-    const book = await prisma.book.create({
+    const copy = await prisma.bookCopy.create({
         data: {
-            title: data.title,
-            description: data.description,
-            isbn: data.isbn,
-            publisher: data.publisher,
-            year: data.year,
-
-            authors: { create: authorCreationData },
-            categories: { create: categoryCreationData },
+            bookId,
+            barcode,
         },
-        include: bookInclude,
     });
 
     return res.status(201).json(buildSuccessResponse(
-        "Book created successfully",
-        book
+        "Book copy created successfully",
+        copy
     ));
 };
 
-export const updateBook = async (req, res, next) => {
+export const updateStatusCopy = async (req, res, next) => {
     const id = parseInt(req.params.id);
-    const data = req.body; 
+    const { status } = req.body;
 
-    // 1. Gunakan transaksi untuk atomisitas
-    const result = await prisma.$transaction(async (tx) => {
-        
-        // 2. Jika array AuthorNames ada di request, hapus relasi lama
-        if (data.authorNames) {
-            await tx.bookAuthor.deleteMany({ where: { bookId: id } });
-        }
-        // 3. Jika array CategoryNames ada di request, hapus relasi lama
-        if (data.categoryNames) {
-            await tx.bookCategory.deleteMany({ where: { bookId: id } });
-        }
-
-        // 4. Siapkan data untuk update
-        const updateData = {
-            ...data, 
-            
-            ...(data.authorNames && {
-                authors: {
-                    create: ConnectOrCreate(data.authorNames, 'author'),
-                }
-            }),
-            ...(data.categoryNames && {
-                categories: {
-                    create: ConnectOrCreate(data.categoryNames, 'category'),
-                }
-            }),
-        };
-        
-        delete updateData.authorNames;
-        delete updateData.categoryNames;
-
-        // 5. Update Book
-        const updatedBook = await tx.book.update({
-            where: { id },
-            data: updateData,
-            include: bookInclude,
-        });
-        
-        return updatedBook;
+    const copy = await prisma.bookCopy.update({
+        where: { id },
+        data: { status },
+        include: copyInclude
     });
 
     return res.json(buildSuccessResponse(
-        "Book updated successfully",
-        result
+        "Book copy status updated successfully",
+        copy
     ));
 };
 
-export const deleteBook = async (req, res, next) => {
+export const deleteCopy = async (req, res, next) => {
     const id = parseInt(req.params.id);
 
-    await prisma.book.delete({
-        where: { id }
+    await prisma.bookCopy.delete({
+        where: { id },
     });
 
     return res.status(204).json({
         success: true,
-        message: "Book deleted successfully"
+        message: "Book copy deleted successfully"
     });
 };
