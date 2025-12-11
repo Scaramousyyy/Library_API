@@ -1,32 +1,47 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import morgan from "morgan";
-import authRoutes from "./routes/auth.routes.js";
-import categoryRoutes from "./routes/category.routes.js";
-import authorRoutes from "./routes/author.routes.js";
-import bookRoutes from "./routes/book.routes.js";
-import bookCopyRoutes from "./routes/bookcopy.routes.js";
-import loanRoutes from "./routes/loan.routes.js";
-import loggerMiddleware from './middleware/logger.middleware.js';
+import apiRouter from "./routes/index.js";
+import { errorHandler } from './middleware/error.middleware.js';
+import { loggerMiddleware } from './middleware/logger.middleware.js';
 
 const app = express();
 
-app.use(express.json());
-app.use(cors());
-app.use(helmet());
-app.use(morgan("dev"));
-app.use(loggerMiddleware);
+// --- MIDDLEWARE GLOBAL ---
 
+app.use(helmet());
+app.use(loggerMiddleware); 
+app.use(express.json());
+
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+};
+app.use(cors(corsOptions));
+
+
+// --- ENDPOINT DASAR & HEALTH CHECK ---
 app.get("/", (req, res) => {
-  res.json({ message: "Library API running" });
+    res.json({ 
+        success: true,
+        message: `${process.env.APP_NAME} API running!`,
+    });
 });
 
-app.use("/auth", authRoutes);
-app.use("/categories", categoryRoutes);
-app.use("/authors", authorRoutes);
-app.use("/books", bookRoutes);
-app.use("/copies", bookCopyRoutes);
-app.use("/loans", loanRoutes);
+
+// --- ROUTE REGISTRATION ---
+app.use("/api", apiRouter); 
+
+
+// --- ERROR HANDLING & 404 FALLBACK ---
+app.use((req, res, next) => {
+    res.status(404).json({
+        success: false,
+        message: "Resource not found on this server."
+    });
+});
+
+app.use(errorHandler);
 
 export default app;
