@@ -8,6 +8,7 @@ import authorRoutes from "./routes/author.routes.js";
 import bookRoutes from "./routes/book.routes.js";
 import bookCopyRoutes from "./routes/bookcopy.routes.js";
 import loanRoutes from "./routes/loan.routes.js";
+import loggerMiddleware from './middleware/logger.middleware.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
+app.use(loggerMiddleware);
 
 app.get("/", (req, res) => {
   res.json({ message: "Library API running" });
