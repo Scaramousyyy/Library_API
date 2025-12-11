@@ -34,7 +34,7 @@ model Book {
   description String?
   isbn        String?       @unique
   publisher   String?
-  year        Int?
+  year        Int
   authors     BookAuthor[]
   copies      BookCopy[]
   categories  BookCategory[]
