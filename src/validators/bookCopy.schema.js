@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createBookCopySchema = z.object({
-  bookId: z.number(),
+  bookId: z.number().int(),
   barcode: z.string().min(3),
 });
 
