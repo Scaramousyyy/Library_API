@@ -46,6 +46,16 @@ export const createBook = async (req, res) => {
   try {
     const data = bookSchema.parse(req.body);
 
+    const authorConnectOrCreate = data.authorNames.map((name) => ({
+      where: { name: name.trim() },
+      create: { name: name.trim() },
+    }));
+
+    const categoryConnectOrCreate = data.categoryNames.map((name) => ({
+      where: { name: name.trim() },
+      create: { name: name.trim() },
+    }));
+
     const book = await prisma.book.create({
       data: {
         title: data.title,
@@ -54,17 +64,28 @@ export const createBook = async (req, res) => {
         publisher: data.publisher,
         year: data.year,
 
+        // Membuat relasi Author (BookAuthor)
         authors: {
-          create: data.authorIds.map((id) => ({
-            authorId: id
-          }))
+          create: authorConnectOrCreate.map((item) => ({
+            author: {
+              connectOrCreate: item,
+            },
+          })),
         },
 
+        // Membuat relasi Category (BookCategory)
         categories: {
-          create: data.categoryIds.map((id) => ({
-            categoryId: id
-          }))
+          create: categoryConnectOrCreate.map((item) => ({
+            category: {
+              connectOrCreate: item,
+            },
+          })),
         },
+      },
+
+      include: {
+        authors: { include: { author: true } },
+        categories: { include: { category: true } },
       },
     });
 
