@@ -46,14 +46,22 @@ export const createBook = async (req, res) => {
   try {
     const data = bookSchema.parse(req.body);
 
-    const authorConnectOrCreate = data.authorNames.map((name) => ({
-      where: { name: name.trim() },
-      create: { name: name.trim() },
+    const authorCreationData = data.authorNames.map((name) => ({
+      author: { 
+        connectOrCreate: {
+          where: { name: name.trim() },
+          create: { name: name.trim() },
+        },
+      },
     }));
 
-    const categoryConnectOrCreate = data.categoryNames.map((name) => ({
-      where: { name: name.trim() },
-      create: { name: name.trim() },
+    const categoryCreationData = data.categoryNames.map((name) => ({
+      category: {
+        connectOrCreate: {
+          where: { name: name.trim() },
+          create: { name: name.trim() },
+        },
+      },
     }));
 
     const book = await prisma.book.create({
@@ -66,20 +74,12 @@ export const createBook = async (req, res) => {
 
         // Membuat relasi Author (BookAuthor)
         authors: {
-          create: authorConnectOrCreate.map((item) => ({
-            author: {
-              connectOrCreate: item,
-            },
-          })),
+          create: authorCreationData,
         },
 
         // Membuat relasi Category (BookCategory)
         categories: {
-          create: categoryConnectOrCreate.map((item) => ({
-            category: {
-              connectOrCreate: item,
-            },
-          })),
+          create: categoryCreationData,
         },
       },
 
@@ -101,42 +101,68 @@ export const createBook = async (req, res) => {
 export const updateBook = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const data = updateBookSchema.parse(req.body);
+    const data = bookSchema.parse(req.body);
 
-    const updated = await prisma.book.update({
-      where: { id },
-      data: {
-        title: data.title,
-        description: data.description,
-        isbn: data.isbn,
-        publisher: data.publisher,
-        year: data.year,
-      }
+    const authorData = data.authorNames
+      ? data.authorNames.map((name) => ({
+          connectOrCreate: {
+            where: { name: name.trim() },
+            create: { name: name.trim() },
+          },
+        }))
+      : [];
+
+    const categoryData = data.categoryNames
+      ? data.categoryNames.map((name) => ({
+          connectOrCreate: {
+            where: { name: name.trim() },
+            create: { name: name.trim() },
+          },
+        }))
+      : [];
+
+    const result = await prisma.$transaction(async (tx) => {
+      if (data.authorNames) {
+            await tx.bookAuthor.deleteMany({ where: { bookId: id } });
+        }
+
+      if (data.categoryNames) {
+            await tx.bookCategory.deleteMany({ where: { bookId: id } });
+        }
+
+      const updatedBook = await tx.book.update({
+            where: { id },
+            data: {
+                title: data.title,
+                description: data.description,
+                isbn: data.isbn,
+                publisher: data.publisher,
+                year: data.year,
+                
+                authors: data.authorNames ? { 
+                    create: authorData.map(item => ({
+                        author: item
+                    }))
+                } : undefined,
+
+                categories: data.categoryNames ? { 
+                    create: categoryData.map(item => ({
+                        category: item
+                    }))
+                } : undefined,
+            },
+            include: {
+                authors: { include: { author: true } },
+                categories: { include: { category: true } },
+            },
+        });
+        
+        return updatedBook;
     });
-
-    if (data.authorIds) {
-      await prisma.bookAuthor.deleteMany({ where: { bookId: id } });
-      await prisma.bookAuthor.createMany({
-        data: data.authorIds.map((aid) => ({
-          bookId: id,
-          authorId: aid
-        }))
-      });
-    }
-
-    if (data.categoryIds) {
-      await prisma.bookCategory.deleteMany({ where: { bookId: id } });
-      await prisma.bookCategory.createMany({
-        data: data.categoryIds.map((cid) => ({
-          bookId: id,
-          categoryId: cid
-        }))
-      });
-    }
 
     return res.json({
       message: "Book updated",
-      data: updated
+      data: result,
     });
   } catch (err) {
     return res.status(400).json({ error: err.message });

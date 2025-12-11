@@ -46,7 +46,7 @@ model Book {
 
 model Author {
   id        Int      @id @default(autoincrement())
-  name      String
+  name      String   @unique
   bio       String?
   books     BookAuthor[]
   createdAt DateTime @default(now())
