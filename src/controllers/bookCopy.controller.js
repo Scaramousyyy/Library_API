@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from '../config/database.js';
 import { createBookCopySchema, updateStatusCopySchema } from "../validators/bookCopy.schema.js";
-
-const prisma = new PrismaClient();
 
 export const getCopies = async (req, res) => {
   try {

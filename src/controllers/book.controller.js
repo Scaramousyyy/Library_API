@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from '../config/database.js';
 import { bookSchema } from "../validators/book.schema.js";
-
-const prisma = new PrismaClient();
 
 export const getBooks = async (req, res) => {
   try {

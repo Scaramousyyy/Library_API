@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
-import { hashPassword, comparePassword } from "../utils/bcrypt.js";
-import { signAccessToken, signRefreshToken } from "../utils/jwt.js";
+import prisma from '../config/database.js';
+import { hashPassword, comparePassword } from "../utils/hash.utils.js";
+import { signAccessToken, signRefreshToken } from "../utils/token.utils.js";
 import { registerSchema, loginSchema } from "../validators/auth.schema.js";
-
-const prisma = new PrismaClient();
 
 export const register = async (req, res) => {
   try {

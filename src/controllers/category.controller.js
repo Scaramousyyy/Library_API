@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from '../config/database.js';
 import { categorySchema } from "../validators/category.schema.js";
-
-const prisma = new PrismaClient();
 
 export const getCategories = async (req, res) => {
   try {

@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from '../config/database.js';
 import { authorSchema } from "../validators/author.schema.js";
-
-const prisma = new PrismaClient();
 
 export const getAuthors = async (req, res) => {
   try {

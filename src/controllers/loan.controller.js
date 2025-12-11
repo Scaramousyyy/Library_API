@@ -1,7 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from '../config/database.js';
 import { borrowSchema, returnSchema } from "../validators/loan.schema.js";
 
-const prisma = new PrismaClient();
 export const borrowBook = async (req, res) => {
   try {
     const userId = req.user.id;
