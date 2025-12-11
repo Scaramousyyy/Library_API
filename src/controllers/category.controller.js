@@ -1,90 +1,116 @@
 import prisma from '../config/database.js';
-import { categorySchema } from "../validators/category.schema.js";
+import { buildSuccessResponse } from '../utils/response.util.js'; 
+import { buildQueryOptions } from '../utils/queryBuilder.js'; 
+import { buildPaginationMeta } from '../utils/pagination.util.js'; 
 
-export const getCategories = async (req, res) => {
-  try {
-    const categories = await prisma.category.findMany({
-      orderBy: { id: "asc" },
-    });
-
-    return res.json({ data: categories });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+const categoryInclude = {
+    books: { 
+        select: { 
+            book: {
+                select: { id: true, title: true }
+            }
+        } 
+    }, 
 };
 
-export const getCategory = async (req, res) => {
-  try {
+
+export const getCategories = async (req, res, next) => {
+    
+    // 1. Dapatkan opsi query
+    const allowedFilters = [];
+    const searchFields = ['name'];
+    
+    const { skip, take, paginationMeta, where, orderBy } = buildQueryOptions(
+        req, 
+        allowedFilters, 
+        searchFields
+    );
+    
+    // 2. Dapatkan total records 
+    const totalRecords = await prisma.category.count({ where });
+
+    // 3. Dapatkan data Categories
+    const categories = await prisma.category.findMany({
+        skip,
+        take,
+        where,
+        orderBy,
+        include: categoryInclude,
+    });
+
+    // 4. Buat objek pagination metadata
+    const pagination = buildPaginationMeta(
+        totalRecords, 
+        paginationMeta.page, 
+        paginationMeta.limit
+    );
+
+    // 5. Respon dengan format standar (termasuk pagination)
+    return res.json(buildSuccessResponse(
+        "Categories fetched successfully", 
+        categories,
+        pagination 
+    ));
+};
+
+export const getCategory = async (req, res, next) => {
     const id = parseInt(req.params.id);
 
     const category = await prisma.category.findUnique({
-      where: { id },
+        where: { id },
+        include: categoryInclude,
     });
 
     if (!category) {
-      return res.status(404).json({ message: "Category not found" });
+        return res.status(404).json({ 
+            success: false, 
+            message: "Category not found" 
+        });
     }
 
-    return res.json({ data: category });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+    return res.json(buildSuccessResponse(
+        "Category fetched successfully", 
+        category
+    ));
 };
 
-export const createCategory = async (req, res) => {
-  try {
-    const data = categorySchema.parse(req.body);
-
-    const exists = await prisma.category.findUnique({
-      where: { name: data.name },
-    });
-
-    if (exists) {
-      return res.status(400).json({ message: "Category already exists" });
-    }
-
+export const createCategory = async (req, res, next) => {
+    const data = req.body; 
+    
     const category = await prisma.category.create({
-      data: { name: data.name },
+        data: data,
     });
 
-    return res.status(201).json({
-      message: "Category created",
-      data: category
-    });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
+    return res.status(201).json(buildSuccessResponse(
+        "Category created successfully",
+        category
+    ));
 };
 
-export const updateCategory = async (req, res) => {
-  try {
+export const updateCategory = async (req, res, next) => {
     const id = parseInt(req.params.id);
-    const data = categorySchema.parse(req.body);
-
-    const category = await prisma.category.update({
-      where: { id },
-      data: { name: data.name },
+    const data = req.body; 
+    
+    const updated = await prisma.category.update({
+        where: { id },
+        data: data,
     });
 
-    return res.json({
-      message: "Category updated",
-      data: category
-    });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
+    return res.json(buildSuccessResponse(
+        "Category updated successfully",
+        updated
+    ));
 };
 
-export const deleteCategory = async (req, res) => {
-  try {
+export const deleteCategory = async (req, res, next) => {
     const id = parseInt(req.params.id);
 
     await prisma.category.delete({
-      where: { id },
+        where: { id },
     });
 
-    return res.json({ message: "Category deleted" });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
+    return res.status(204).json({
+        success: true,
+        message: "Category deleted successfully"
+    });
 };

@@ -1,82 +1,114 @@
 import prisma from '../config/database.js';
-import { authorSchema } from "../validators/author.schema.js";
+import { buildSuccessResponse } from '../utils/response.util.js'; 
+import { buildQueryOptions } from '../utils/query.util.js';
+import { buildPaginationMeta } from '../utils/pagination.util.js';
 
-export const getAuthors = async (req, res) => {
-  try {
-    const authors = await prisma.author.findMany({
-      orderBy: { id: "asc" },
-    });
-
-    return res.json({ data: authors });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+const authorInclude = {
+    books: { 
+        select: { 
+            book: {
+                select: { id: true, title: true }
+            }
+        } 
+    }
 };
 
-export const getAuthor = async (req, res) => {
-  try {
+export const getAuthors = async (req, res, next) => {
+    // 1. Dapatkan opsi query
+    const allowedFilters = [];
+    const searchFields = ['name', 'bio']; 
+    
+    const { skip, take, paginationMeta, where, orderBy } = buildQueryOptions(
+        req, 
+        allowedFilters, 
+        searchFields
+    );
+    
+    // 2. Dapatkan total records untuk pagination
+    const totalRecords = await prisma.author.count({ where });
+
+    // 3. Dapatkan data Authors
+    const authors = await prisma.author.findMany({
+        skip,
+        take,
+        where,
+        orderBy,
+        include: authorInclude,
+    });
+
+    // 4. Buat objek pagination metadata
+    const pagination = buildPaginationMeta(
+        totalRecords, 
+        paginationMeta.page, 
+        paginationMeta.limit
+    );
+
+    // 5. Respon dengan format standar (termasuk pagination)
+    return res.json(buildSuccessResponse(
+        "Authors fetched successfully", 
+        authors,
+        pagination
+    ));
+};
+
+export const getAuthor = async (req, res, next) => {
     const id = parseInt(req.params.id);
 
     const author = await prisma.author.findUnique({
-      where: { id },
+        where: { id },
+        include: authorInclude,
     });
 
     if (!author) {
-      return res.status(404).json({ message: "Author not found" });
+        return res.status(404).json({ 
+            success: false, 
+            message: "Author not found" 
+        });
     }
 
-    return res.json({ data: author });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+    return res.json(buildSuccessResponse(
+        "Author fetched successfully", 
+        author
+    ));
 };
 
-export const createAuthor = async (req, res) => {
-  try {
-    const data = authorSchema.parse(req.body);
-
+export const createAuthor = async (req, res, next) => {
+    const data = req.body; 
+    
     const author = await prisma.author.create({
-      data,
+        data,
     });
 
-    return res.status(201).json({
-      message: "Author created",
-      data: author,
-    });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
+    return res.status(201).json(buildSuccessResponse(
+        "Author created successfully",
+        author
+    ));
 };
 
-export const updateAuthor = async (req, res) => {
-  try {
+export const updateAuthor = async (req, res, next) => {
     const id = parseInt(req.params.id);
-    const data = authorSchema.parse(req.body);
+    const data = req.body; 
 
     const updated = await prisma.author.update({
-      where: { id },
-      data,
+        where: { id },
+        data,
     });
 
-    return res.json({
-      message: "Author updated",
-      data: updated,
-    });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
+    return res.json(buildSuccessResponse(
+        "Author updated successfully",
+        updated
+    ));
 };
 
-export const deleteAuthor = async (req, res) => {
-  try {
+export const deleteAuthor = async (req, res, next) => {
     const id = parseInt(req.params.id);
 
     await prisma.author.delete({
-      where: { id },
+        where: { id },
     });
 
-    return res.json({ message: "Author deleted" });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
+    return res.status(204).json({
+        success: true,
+        message: "Author deleted successfully"
+    });
 };

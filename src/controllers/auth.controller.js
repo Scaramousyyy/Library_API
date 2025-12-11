@@ -1,6 +1,7 @@
 import prisma from '../config/database.js';
 import { hashPassword, comparePassword } from "../utils/hash.util.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/token.util.js";
+import { buildSuccessResponse } from "../utils/response.util.js";
 
 export const register = async (req, res, next) => {
     const { email, password, name } = req.body;
@@ -20,11 +21,10 @@ export const register = async (req, res, next) => {
     });
 
     // 3. Respon Sukses
-    return res.status(201).json({
-        success: true,
-        message: "User registered successfully",
-        data: user,
-    });
+    return res.status(201).json(buildSuccessResponse(
+        "User registered successfully",
+        user
+    ));
 };
 
 export const login = async (req, res, next) => {
@@ -55,20 +55,14 @@ export const login = async (req, res, next) => {
     });
 
     // 4. Respon Sukses
-    return res.json({
-        success: true,
-        message: "Login successful",
-        data: {
+    return res.json(buildSuccessResponse(
+        "Login successful",
+        {
             accessToken,
             refreshToken,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-            },
-        },
-    });
+            user: { id: user.id, name: user.name, email: user.email, role: user.role },
+        }
+    ));
 };
 
 export const refresh = async (req, res, next) => {
@@ -93,13 +87,10 @@ export const refresh = async (req, res, next) => {
         const newAccessToken = signAccessToken({ userId, role });
 
         // 5. Respon Sukses
-        return res.json({
-            success: true,
-            message: "New access token generated successfully",
-            data: {
-                accessToken: newAccessToken,
-            },
-        });
+        return res.json(buildSuccessResponse(
+            "New access token generated successfully",
+            { accessToken: newAccessToken },
+        ));
     } catch (err) {
         next(err);
     }
@@ -129,9 +120,8 @@ export const me = async (req, res, next) => {
     }
 
     // 4. Respon Sukses
-    return res.json({
-        success: true,
-        message: "User profile fetched successfully",
-        data: user,
-    });
+    return res.json(buildSuccessResponse(
+        "User profile fetched successfully",
+        user
+    ));
 };

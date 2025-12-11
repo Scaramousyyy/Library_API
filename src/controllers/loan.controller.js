@@ -1,143 +1,209 @@
 import prisma from '../config/database.js';
-import { borrowSchema, returnSchema } from "../validators/loan.schema.js";
+import { buildSuccessResponse } from '../utils/response.util.js'; 
+import { buildQueryOptions } from '../utils/queryBuilder.js'; 
+import { buildPaginationMeta } from '../utils/pagination.util.js'; 
 
-export const borrowBook = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { bookCopyId, days } = borrowSchema.parse(req.body);
-
-    const copy = await prisma.bookCopy.findUnique({
-      where: { id: bookCopyId }
-    });
-
-    if (!copy) {
-      return res.status(404).json({ message: "Book copy not found" });
+const loanInclude = {
+    user: { select: { id: true, name: true, email: true } },
+    bookCopy: { 
+        include: { 
+            book: { 
+                select: { id: true, title: true, isbn: true } 
+            } 
+        } 
     }
-
-    if (copy.status !== "AVAILABLE") {
-      return res.status(400).json({ message: "Book copy not available" });
-    }
-
-    // Check existing Loan
-    const existingLoan = await prisma.loan.findFirst({
-      where: {
-        userId,
-        bookCopyId,
-        status: "ONGOING"
-      }
-    });
-
-    if (existingLoan) {
-      return res.status(409).json({
-        message: "You already borrowed this book copy"
-      });
-    }
-
-    const now = new Date();
-    const due = new Date(now);
-    due.setDate(now.getDate() + days);
-
-    const loan = await prisma.loan.create({
-      data: {
-        userId,
-        bookCopyId,
-        dueDate: due
-      }
-    });
-
-    // Update book copy status
-    await prisma.bookCopy.update({
-      where: { id: bookCopyId },
-      data: { status: "BORROWED" }
-    });
-
-    return res.status(201).json({
-      message: "Book borrowed successfully",
-      data: loan
-    });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
 };
 
-export const returnBook = async (req, res) => {
-  try {
+export const borrowBook = async (req, res, next) => {
+    const userId = req.user.userId;
+    const { bookCopyId, days } = req.body; 
+
+    const result = await prisma.$transaction(async (tx) => {
+        
+        // 1. Cek Salinan Buku
+        const copy = await tx.bookCopy.findUnique({
+            where: { id: bookCopyId }
+        });
+
+        if (!copy) {
+            return res.status(404).json({ success: false, message: "Book copy not found" });
+        }
+
+        if (copy.status !== "AVAILABLE") {
+            return res.status(400).json({ success: false, message: "Book copy not available" });
+        }
+
+        // 2. Cek Pinjaman Berlangsung
+        const existingLoan = await tx.loan.findFirst({
+            where: { userId, bookCopyId, status: "ONGOING" }
+        });
+
+        if (existingLoan) {
+            return res.status(409).json({
+                success: false,
+                message: "You already have an ongoing loan for this book copy"
+            });
+        }
+
+        // 3. Hitung Tanggal Jatuh Tempo
+        const now = new Date();
+        const dueDate = new Date(now);
+        dueDate.setDate(now.getDate() + days);
+
+        // 4. Buat Loan
+        const loan = await tx.loan.create({
+            data: {
+                userId,
+                bookCopyId,
+                dueDate: dueDate,
+            },
+            include: loanInclude,
+        });
+
+        // 5. Update status salinan buku
+        await tx.bookCopy.update({
+            where: { id: bookCopyId },
+            data: { status: "BORROWED" }
+        });
+
+        return loan;
+    });
+
+    return res.status(201).json(buildSuccessResponse(
+        "Book borrowed successfully",
+        result
+    ));
+};
+
+export const returnBook = async (req, res, next) => {
     const loanId = parseInt(req.params.id);
     const user = req.user;
+    const { returnedAt: returnedAtBody } = req.body;
 
-    const body = returnSchema.parse(req.body);
-    const returnedAt = body.returnedAt ? new Date(body.returnedAt) : new Date();
+    const returnedAt = returnedAtBody ? new Date(returnedAtBody) : new Date();
 
-    const loan = await prisma.loan.findUnique({
-      where: { id: loanId },
-      include: { bookCopy: true }
-    });
+    const result = await prisma.$transaction(async (tx) => {
+        
+        // 1. Cari Loan
+        const loan = await tx.loan.findUnique({
+            where: { id: loanId },
+            include: { bookCopy: true }
+        });
 
-    if (!loan) return res.status(404).json({ message: "Loan not found" });
+        if (!loan) return res.status(404).json({ success: false, message: "Loan not found" });
 
-    if (user.role !== "ADMIN" && loan.userId !== user.id) {
-      return res.status(403).json({ message: "Not allowed" });
-    }
-
-    if (loan.status !== "ONGOING") {
-      return res.status(400).json({ message: "Loan already completed" });
-    }
-
-    let status = "RETURNED";
-    if (returnedAt > loan.dueDate) {
-      status = "LATE";
-    }
-
-    const updatedLoan = await prisma.loan.update({
-      where: { id: loanId },
-      data: {
-        returnedAt,
-        status
-      }
-    });
-
-    await prisma.bookCopy.update({
-      where: { id: loan.bookCopyId },
-      data: { status: "AVAILABLE" }
-    });
-
-    return res.json({
-      message: "Book returned successfully",
-      data: updatedLoan
-    });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
-};
-
-export const getAllLoans = async (req, res) => {
-  try {
-    const loans = await prisma.loan.findMany({
-      include: {
-        user: true,
-        bookCopy: {
-          include: { book: true }
+        // 2. Otorisasi Kepemilikan (Wajib)
+        if (user.role !== "ADMIN" && loan.userId !== user.userId) { // Pastikan menggunakan user.userId dari token
+            return res.status(403).json({ success: false, message: "Forbidden: You are not authorized to close this loan" });
         }
-      }
+
+        // 3. Cek Status Pinjaman
+        if (loan.status !== "ONGOING") {
+            return res.status(400).json({ success: false, message: "Loan is already completed or canceled" });
+        }
+
+        // 4. Tentukan Status Pengembalian
+        let status = "RETURNED";
+        if (returnedAt > loan.dueDate) {
+            status = "LATE";
+        }
+
+        // 5. Update Loan
+        const updatedLoan = await tx.loan.update({
+            where: { id: loanId },
+            data: {
+                returnedAt,
+                status
+            },
+            include: loanInclude,
+        });
+
+        // 6. Update Book Copy Status ke AVAILABLE
+        await tx.bookCopy.update({
+            where: { id: loan.bookCopyId },
+            data: { status: "AVAILABLE" }
+        });
+
+        return updatedLoan;
     });
 
-    return res.json({ data: loans });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+
+    return res.json(buildSuccessResponse(
+        "Book returned successfully",
+        result
+    ));
 };
 
-export const getMyLoans = async (req, res) => {
-  try {
+export const getAllLoans = async (req, res, next) => {
+    // 1. Dapatkan opsi query
+    const allowedFilters = ['status', 'userId']; 
+    const searchFields = []; 
+    
+    const { skip, take, paginationMeta, where, orderBy } = buildQueryOptions(
+        req, 
+        allowedFilters, 
+        searchFields
+    );
+    
+    // 2. Dapatkan total records 
+    const totalRecords = await prisma.loan.count({ where });
+
+    // 3. Dapatkan data Loans
     const loans = await prisma.loan.findMany({
-      where: { userId: req.user.id },
-      include: {
-        bookCopy: { include: { book: true } }
-      }
+        skip,
+        take,
+        where,
+        orderBy,
+        include: loanInclude,
     });
 
-    return res.json({ data: loans });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+    // 4. Buat objek pagination metadata
+    const pagination = buildPaginationMeta(
+        totalRecords, 
+        paginationMeta.page, 
+        paginationMeta.limit
+    );
+
+    return res.json(buildSuccessResponse(
+        "All loans fetched successfully", 
+        loans,
+        pagination 
+    ));
+};
+
+export const getMyLoans = async (req, res, next) => {
+    const userId = req.user.userId;
+    
+    // 1. Dapatkan opsi query
+    const { skip, take, paginationMeta, orderBy } = buildQueryOptions(req);
+    
+    // 2. Filter wajib berdasarkan userId
+    const where = { userId };
+    
+    // 3. Dapatkan total records 
+    const totalRecords = await prisma.loan.count({ where });
+
+    // 4. Dapatkan data Loans
+    const loans = await prisma.loan.findMany({
+        skip,
+        take,
+        where,
+        orderBy,
+        include: {
+            bookCopy: { include: { book: { select: { id: true, title: true } } } }
+        },
+    });
+
+    // 5. Buat objek pagination metadata
+    const pagination = buildPaginationMeta(
+        totalRecords, 
+        paginationMeta.page, 
+        paginationMeta.limit
+    );
+
+    return res.json(buildSuccessResponse(
+        "My loans fetched successfully", 
+        loans,
+        pagination 
+    ));
 };
