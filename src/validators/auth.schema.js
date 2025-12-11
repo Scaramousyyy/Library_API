@@ -8,15 +8,16 @@ const passwordRequirement = z.string()
 
 
 export const registerSchema = z.object({
-    // User Model membutuhkan 'role', namun role akan diatur di controller (default USER)
     email: z.string().email("Invalid email format"),
     password: passwordRequirement,
     name: z.string().min(1, "Name cannot be empty"),
-    // Jika Anda ingin mengizinkan ADMIN membuat ADMIN, Anda bisa menambahkan:
-    // role: z.enum(["USER", "ADMIN"]).optional(), 
 });
 
 export const loginSchema = z.object({
     email: z.string().email("Invalid email format"),
-    password: z.string().min(1, "Password is required"), // Tidak perlu cek kompleksitas saat login
+    password: z.string().min(1, "Password is required"),
+});
+
+export const refreshSchema = z.object({
+    refreshToken: z.string().min(1, "Refresh token is required"),
 });
