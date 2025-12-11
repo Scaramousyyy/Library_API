@@ -1,6 +1,6 @@
 import prisma from '../config/database.js';
 import { hashPassword, comparePassword } from "../utils/hash.util.js";
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/token.utils.js";
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/token.util.js";
 
 export const register = async (req, res, next) => {
     const { email, password, name } = req.body;
