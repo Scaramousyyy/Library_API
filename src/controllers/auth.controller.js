@@ -1,73 +1,137 @@
 import prisma from '../config/database.js';
-import { hashPassword, comparePassword } from "../utils/hash.utils.js";
-import { signAccessToken, signRefreshToken } from "../utils/token.utils.js";
-import { registerSchema, loginSchema } from "../validators/auth.schema.js";
+import { hashPassword, comparePassword } from "../utils/hash.util.js";
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/token.utils.js";
 
-export const register = async (req, res) => {
-  try {
-    const data = registerSchema.parse(req.body);
+export const register = async (req, res, next) => {
+    const { email, password, name } = req.body;
+    
+    // 1. Hash password
+    const hashedPassword = await hashPassword(password);
 
-    const exists = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
-
-    if (exists) {
-      return res.status(400).json({ message: "Email already registered" });
-    }
-
-    const hashed = await hashPassword(data.password);
-
+    // 2. Buat user baru
     const user = await prisma.user.create({
-      data: {
-        email: data.email,
-        password: hashed,
-        name: data.name,
-      },
+        data: {
+            email,
+            password: hashedPassword,
+            name,
+            role: 'USER',
+        },
+        select: { id: true, email: true, name: true, role: true },
     });
 
+    // 3. Respon Sukses
     return res.status(201).json({
-      message: "User registered successfully",
-      user: { id: user.id, email: user.email, name: user.name },
+        success: true,
+        message: "User registered successfully",
+        data: user,
     });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
 };
 
-export const login = async (req, res) => {
-  try {
-    const data = loginSchema.parse(req.body);
+export const login = async (req, res, next) => {
+    const { email, password } = req.body;
 
+    // 1. Cari user
     const user = await prisma.user.findUnique({
-      where: { email: data.email },
+        where: { email },
     });
 
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
+    // 2. Cek user dan password
+    if (!user || !(await comparePassword(password, user.password))) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid credentials (email or password)",
+        });
     }
 
-    const match = await comparePassword(data.password, user.password);
-
-    if (!match) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
+    // 3. Buat token
     const accessToken = signAccessToken({
-      id: user.id,
-      role: user.role,
+        userId: user.id,
+        role: user.role,
     });
 
     const refreshToken = signRefreshToken({
-      id: user.id,
-      role: user.role,
+        userId: user.id,
+        role: user.role,
     });
 
+    // 4. Respon Sukses
     return res.json({
-      message: "Login successful",
-      accessToken,
-      refreshToken,
+        success: true,
+        message: "Login successful",
+        data: {
+            accessToken,
+            refreshToken,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            },
+        },
     });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
+};
+
+export const refresh = async (req, res, next) => {
+    // 1. Ambil refresh token
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(401).json({
+            success: false,
+            message: "Refresh token is required",
+        });
+    }
+
+    try {
+        // 2. Verifikasi refresh token.
+        const decoded = verifyRefreshToken(refreshToken);
+
+        // 3. Ekstrak data user dari payload token yang sudah di-decode
+        const { userId, role } = decoded;
+
+        // 4. Buat Access Token baru
+        const newAccessToken = signAccessToken({ userId, role });
+
+        // 5. Respon Sukses
+        return res.json({
+            success: true,
+            message: "New access token generated successfully",
+            data: {
+                accessToken: newAccessToken,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const me = async (req, res, next) => {
+    // 1. Ambil userId
+    const userId = req.user.userId; 
+
+    // 2. Cari data user
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { 
+            id: true, 
+            email: true, 
+            name: true, 
+            role: true 
+        },
+    });
+
+    // 3. Handle jika user tidak ditemukan
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: "User profile not found",
+        });
+    }
+
+    // 4. Respon Sukses
+    return res.json({
+        success: true,
+        message: "User profile fetched successfully",
+        data: user,
+    });
 };
