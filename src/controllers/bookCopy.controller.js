@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { createBookCopySchema, updateBookCopySchema } from "../validators/bookCopy.schema.js";
+import { createBookCopySchema, updateStatusCopySchema } from "../validators/bookCopy.schema.js";
 
 const prisma = new PrismaClient();
 
@@ -22,7 +22,6 @@ export const getCopies = async (req, res) => {
     ]);
 
     return res.json({
-      success: true,
       data: copies,
       pagination: {
         total,
@@ -31,7 +30,7 @@ export const getCopies = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -45,12 +44,12 @@ export const getCopy = async (req, res) => {
     });
 
     if (!copy) {
-      return res.status(404).json({ success: false, message: "Copy not found" });
+      return res.status(404).json({ message: "Copy not found" });
     }
 
-    return res.json({ success: true, data: copy });
+    return res.json({ data: copy });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -63,7 +62,7 @@ export const createCopy = async (req, res) => {
     });
 
     if (!book) {
-      return res.status(404).json({ success: false, message: "Book not found" });
+      return res.status(404).json({ message: "Book not found" });
     }
 
     const copy = await prisma.bookCopy.create({
@@ -74,12 +73,11 @@ export const createCopy = async (req, res) => {
     });
 
     return res.status(201).json({
-      success: true,
       message: "Book copy created",
       data: copy,
     });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ message: error.message });
   }
 };
 
@@ -94,12 +92,11 @@ export const updateStatusCopy = async (req, res) => {
     });
 
     return res.json({
-      success: true,
       message: "Book copy updated",
       data: copy,
     });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ message: error.message });
   }
 };
 
@@ -111,8 +108,8 @@ export const deleteCopy = async (req, res) => {
       where: { id },
     });
 
-    return res.json({ success: true, message: "Book copy deleted" });
+    return res.json({ message: "Book copy deleted" });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ message: error.message });
   }
 };

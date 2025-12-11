@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import authorRoutes from "./routes/author.routes.js";
 import bookRoutes from "./routes/book.routes.js";
+import bookCopyRoutes from "./routes/bookcopy.routes.js";
 
 const app = express();
 
@@ -22,5 +23,6 @@ app.use("/auth", authRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/authors", authorRoutes);
 app.use("/books", bookRoutes);
+app.use("/copies", bookCopyRoutes);
 
 export default app;
