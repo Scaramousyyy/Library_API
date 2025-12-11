@@ -1,50 +1,65 @@
+import { Prisma } from '@prisma/client';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+
 export const errorHandler = (err, req, res, next) => {
-  console.error("ERROR:", err);
+    const NODE_ENV = process.env.NODE_ENV || 'development';
+    console.error(`[${NODE_ENV}]`, "ERROR:", err.message);
+    if (NODE_ENV === 'development' && err.stack) {
+        console.error(err.stack);
+    }
 
-  // Prisma unique constraint error
-  if (err.code === "P2002") {
-    return res.status(409).json({
-      success: false,
-      message: "Duplicate entry",
-      errors: err.meta?.target,
+    let statusCode = 500;
+    let message = "Internal Server Error";
+    let errors = undefined;
+
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        switch (err.code) {
+            case 'P2002': // Unique constraint violation
+                statusCode = 409;
+                message = "Duplicate entry error";
+                errors = err.meta?.target || ['Unique field constraint violated'];
+                break;
+            case 'P2025': // Record not found
+                statusCode = 404;
+                message = "Resource not found";
+                break;
+            case 'P2003': // Foreign Key constraint violation
+                statusCode = 400;
+                message = "Foreign key constraint failed";
+                break;
+            default:
+                break;
+        }
+    }
+
+    else if (err instanceof JsonWebTokenError) {
+        statusCode = 401;
+        message = "Invalid token signature or format.";
+    } else if (err instanceof TokenExpiredError) {
+        statusCode = 401;
+        message = "Token has expired.";
+    }
+
+    else if (err.errors) {
+         statusCode = 400;
+         message = "Validation Error";
+         errors = err.errors;
+    }
+
+    if (statusCode === 500 && NODE_ENV !== 'development') {
+        message = "Internal Server Error";
+        errors = undefined;
+    }
+    
+    if (statusCode === 500 && NODE_ENV === 'development' && err.message) {
+        message = err.message;
+    }
+
+
+    return res.status(statusCode).json({
+        success: false,
+        message: message,
+        ...(errors && { errors: errors }),
+        ...(statusCode === 500 && NODE_ENV === 'development' && { stack: err.stack }),
     });
-  }
-
-  // Prisma not found
-  if (err.code === "P2025") {
-    return res.status(404).json({
-      success: false,
-      message: "Resource not found",
-    });
-  }
-
-  // JWT error
-  if (err.name === "JsonWebTokenError") {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token",
-    });
-  }
-
-  if (err.name === "TokenExpiredError") {
-    return res.status(401).json({
-      success: false,
-      message: "Token expired",
-    });
-  }
-
-  // Zod validation error
-  if (err.errors) {
-    return res.status(400).json({
-      success: false,
-      message: "Validation error",
-      errors: err.errors,
-    });
-  }
-
-  // Default
-  return res.status(500).json({
-    success: false,
-    message: "Internal server error",
-  });
 };

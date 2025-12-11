@@ -1,23 +1,47 @@
-import jwt from "jsonwebtoken";
+import { verifyAccessToken } from "../utils/jwt.js"; 
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 
 export const authMiddleware = (req, res, next) => {
-  const header = req.headers["authorization"];
+    const authHeader = req.headers["authorization"];
 
-  if (!header) {
-    return res.status(401).json({ message: "Missing token" });
-  }
+    if (!authHeader) {
+        return res.status(401).json({ 
+            success: false, 
+            message: "Authentication required: Missing Authorization header" 
+        });
+    }
 
-  const token = header.split(" ")[1]; // Bearer <token>
+    const [scheme, token] = authHeader.split(" ");
 
-  if (!token) {
-    return res.status(401).json({ message: "Invalid token format" });
-  }
+    if (scheme !== "Bearer" || !token) {
+        return res.status(401).json({ 
+            success: false, 
+            message: "Invalid token format: Must be 'Bearer <token>'" 
+        });
+    }
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
-  }
+    try {
+        const decoded = verifyAccessToken(token); 
+        
+        req.user = decoded; 
+        
+        next();
+    } catch (err) {
+        
+        if (err instanceof TokenExpiredError) {
+            return res.status(401).json({ 
+                success: false, 
+                message: "Access token has expired." 
+            });
+        }
+        
+        if (err instanceof JsonWebTokenError) {
+             return res.status(401).json({ 
+                success: false, 
+                message: "Invalid token signature or format." 
+            });
+        }
+
+        next(err); 
+    }
 };
