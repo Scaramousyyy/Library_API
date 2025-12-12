@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import compression from "compression";
 import apiRouter from "./routes/index.js";
 import { errorHandler } from './middleware/error.middleware.js';
 import { loggerMiddleware } from './middleware/logger.middleware.js';
@@ -10,6 +11,7 @@ const app = express();
 // --- MIDDLEWARE GLOBAL ---
 
 app.use(helmet());
+app.use(compression());
 app.use(loggerMiddleware); 
 app.use(express.json());
 
