@@ -114,3 +114,17 @@ Berlaku untuk semua `GET` List Endpoints (e.g., `/books`, `/users`, `/loans`).
 | **`POST`** | `/users` | Membuat akun pengguna baru (oleh Admin). | ✅ | ADMIN | - |
 | **`PUT`** | `/users/:id` | Memperbarui detail pengguna (termasuk role). | ✅ | ADMIN/Owner | - |
 | **`DELETE`**| `/users/:id` | Menghapus akun pengguna. | ✅ | ADMIN | Admin tidak bisa menghapus diri sendiri. |
+
+---
+
+## V. Test Credentials (Untuk Pengujian)
+Akun-akun berikut telah dibuat via Database Seeding dan disediakan HANYA untuk tujuan pengujian.
+
+Role | Email | Password | Status Pinjaman Saat Ini | Catatan |
+| :--- | :--- | :--- | :--- | :--- |
+| **Admin** | `admin@library.com` | `Admin123` | N/A | Akun hak akses penuh (Create, Update, Delete). |
+| **User 1 (Active)** | `user1@library.com` | `User1234` | ONGOING | Digunakan untuk menguji pengembalian normal. |
+| **User 2 (History)** | `user2@library.com` | `User1234` | RETURNED | Pinjaman sudah selesai, digunakan untuk menguji riwayat. |
+| **User 3 (Late)** | `user3@library.com` | `User1234` | ONGOING & LATE | Digunakan untuk menguji penanganan keterlambatan. |
+
+**Catatan Keamanan:** Password adalah *hardcoded* untuk tujuan testing, bukan password asli.
