@@ -6,7 +6,7 @@ import { buildPaginationMeta } from '../utils/pagination.util.js';
 const copyInclude = {
     book: { select: { id: true, title: true, isbn: true } },
     loans: { take: 1, orderBy: { borrowedAt: 'desc' } }
-};
+}; 
 
 export const getCopies = async (req, res, next) => {
     

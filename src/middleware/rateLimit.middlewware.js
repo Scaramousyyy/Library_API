@@ -10,7 +10,7 @@ export const generalLimiter = rateLimit({
         success: false,
         message: "Too many requests from this IP, please try again after 15 minutes",
     },
-});
+}); 
 
 // --- 2. Konfigurasi Khusus (Untuk login/register, cegah Brute Force)---
 export const authLimiter = rateLimit({

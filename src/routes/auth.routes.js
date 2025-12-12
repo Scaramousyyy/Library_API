@@ -5,7 +5,7 @@ import { validate } from "../middleware/validate.middleware.js";
 import { authLimiter } from "../middleware/ratelimit.middleware.js";
 import { registerSchema, loginSchema } from "../validators/auth.schema.js";
 
-const router = express.Router();
+const router = express.Router(); 
 
 router.post(
     "/register", 

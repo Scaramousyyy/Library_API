@@ -4,7 +4,7 @@ import usersRoutes from "./user.routes.js";
 import authorsRoutes from "./author.routes.js";
 import categoriesRoutes from "./category.routes.js";
 import booksRoutes from "./book.routes.js";
-import bookCopiesRoutes from "./bookCopy.routes.js";
+import bookCopiesRoutes from "./bookcopy.routes.js";
 import loansRoutes from "./loan.routes.js";
 import { generalLimiter } from "../middleware/ratelimit.middleware.js";
 
