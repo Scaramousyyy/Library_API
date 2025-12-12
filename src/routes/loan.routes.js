@@ -3,7 +3,7 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 import { requireRole } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { borrowBook, returnBook, getAllLoans, getMyLoans } from "../controllers/loan.controller.js";
-import { borrowSchema, returnSchema } from "../validators/loan.validator.js"; 
+import { borrowSchema, returnSchema } from "../validators/loan.schema.js"; 
 
 const router = express.Router();
 

@@ -3,7 +3,7 @@ import { getAuthors, getAuthor, createAuthor, updateAuthor, deleteAuthor } from 
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { requireRole } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
-import { authorSchema } from "../validators/author.validator.js"; 
+import { authorSchema } from "../validators/author.schema.js"; 
 
 const updateAuthorSchema = authorSchema.partial();
 

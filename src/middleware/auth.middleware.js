@@ -1,5 +1,7 @@
 import { verifyAccessToken } from "../utils/token.util.js"; 
-import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+
+const { JsonWebTokenError, TokenExpiredError } = jwt;
 
 export const authMiddleware = (req, res, next) => {
     const authHeader = req.headers["authorization"];

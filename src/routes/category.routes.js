@@ -3,7 +3,7 @@ import { getCategories, getCategory, createCategory, updateCategory, deleteCateg
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { requireRole } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
-import { categorySchema } from "../validators/category.validator.js"; 
+import { categorySchema } from "../validators/category.schema.js"; 
 
 const updateCategorySchema = categorySchema.partial();
 

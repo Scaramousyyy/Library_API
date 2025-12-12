@@ -3,7 +3,7 @@ import { getBooks, getBook, createBook, updateBook, deleteBook } from "../contro
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { requireRole } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js"; 
-import { bookSchema } from "../validators/book.validator.js"; 
+import { bookSchema } from "../validators/book.schema.js"; 
 
 const updateBookSchema = bookSchema.partial(); 
 

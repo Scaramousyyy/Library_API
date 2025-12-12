@@ -1,5 +1,7 @@
 import { Prisma } from '@prisma/client';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
+
+const { JsonWebTokenError, TokenExpiredError } = jwt;
 
 export const errorHandler = (err, req, res, next) => {
     const NODE_ENV = process.env.NODE_ENV || 'development';

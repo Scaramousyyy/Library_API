@@ -3,7 +3,7 @@ import { getCopies, getCopy, createCopy, updateStatusCopy, deleteCopy } from "..
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { requireRole } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
-import { createBookCopySchema, updateStatusCopySchema } from "../validators/bookCopy.validator.js"; 
+import { createBookCopySchema, updateStatusCopySchema } from "../validators/bookCopy.schema.js"; 
 
 const router = express.Router();
 

@@ -3,7 +3,7 @@ import { getUsers, getUser, createUser, updateUser, deleteUser } from "../contro
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { requireRole } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
-import { createUserSchema, updateUserSchema } from "../validators/user.validator.js"; 
+import { createUserSchema, updateUserSchema } from "../validators/user.schema.js"; 
 
 const router = express.Router();
 

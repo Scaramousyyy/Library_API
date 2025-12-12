@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { passwordRequirement } from "./auth.validator.js"; 
+import { passwordRequirement } from "./auth.schema.js"; 
 
 const RoleEnum = z.enum(["USER", "ADMIN"]);
 

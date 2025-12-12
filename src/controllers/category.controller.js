@@ -1,6 +1,6 @@
 import prisma from '../config/database.js';
 import { buildSuccessResponse } from '../utils/response.util.js'; 
-import { buildQueryOptions } from '../utils/queryBuilder.js'; 
+import { buildQueryOptions } from '../utils/query.util.js'; 
 import { buildPaginationMeta } from '../utils/pagination.util.js'; 
 
 const categoryInclude = {
