@@ -6,8 +6,12 @@ import categoriesRoutes from "./category.routes.js";
 import booksRoutes from "./book.routes.js";
 import bookCopiesRoutes from "./bookCopy.routes.js";
 import loansRoutes from "./loan.routes.js";
+import { generalLimiter } from "../middleware/rateLimit.middleware.js";
 
 const router = express.Router();
+
+// --- Apply General Rate Limiter to All Routes ---
+router.use(generalLimiter);
 
 // --- Health Check Endpoint ---
 router.get("/health", (req, res) => {
