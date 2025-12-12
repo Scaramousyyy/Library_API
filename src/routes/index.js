@@ -6,7 +6,7 @@ import categoriesRoutes from "./category.routes.js";
 import booksRoutes from "./book.routes.js";
 import bookCopiesRoutes from "./bookCopy.routes.js";
 import loansRoutes from "./loan.routes.js";
-import { generalLimiter } from "../middleware/rateLimit.middleware.js";
+import { generalLimiter } from "../middleware/ratelimit.middleware.js";
 
 const router = express.Router();
 
