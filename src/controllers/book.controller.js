@@ -156,8 +156,5 @@ export const deleteBook = async (req, res, next) => {
         where: { id }
     });
 
-    return res.status(204).json({
-        success: true,
-        message: "Book deleted successfully"
-    });
+    return res.status(204).send();
 };

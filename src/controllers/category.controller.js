@@ -109,8 +109,5 @@ export const deleteCategory = async (req, res, next) => {
         where: { id },
     });
 
-    return res.status(204).json({
-        success: true,
-        message: "Category deleted successfully"
-    });
+    return res.status(204).send();
 };

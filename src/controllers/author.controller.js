@@ -107,8 +107,5 @@ export const deleteAuthor = async (req, res, next) => {
         where: { id },
     });
 
-    return res.status(204).json({
-        success: true,
-        message: "Author deleted successfully"
-    });
+    return res.status(204).send();
 };

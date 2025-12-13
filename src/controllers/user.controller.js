@@ -161,7 +161,5 @@ export const deleteUser = async (req, res, next) => {
         where: { id },
     });
 
-    return res.json(buildSuccessResponse(
-        "User deleted successfully"
-    ));
+    return res.status(204).send();
 };
