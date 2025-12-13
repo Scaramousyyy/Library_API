@@ -7,6 +7,7 @@ import { errorHandler } from './middleware/error.middleware.js';
 import { loggerMiddleware } from './middleware/logger.middleware.js';
 
 const app = express();
+app.set('trust proxy', 1);
 
 // --- MIDDLEWARE GLOBAL ---
 

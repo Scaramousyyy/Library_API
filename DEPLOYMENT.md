@@ -6,7 +6,7 @@ Dokumen ini berisi panduan lengkap untuk _deployment_ dan maintenance aplikasi *
 ## I. Informasi Proyek
 | Detail | Deskripsi |
 | --- | --- |
-| **🔗Repository Github** | [https://github.com/<YOUR_USERNAME>/LMS_Pemweb](https://github.com/Scaramousyyy/Library_API/edit/main/DEPLOYMENT.md) |
+| **🔗Repository Github** | https://github.com/Scaramousyyy/Library_API |
 | **📱Nama Aplikasi** | library-api |
 | **👨🏻‍💻Process Manager** | PM2 |
 | **🔀Reverse Proxy** | Nginx |
