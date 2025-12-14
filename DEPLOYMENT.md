@@ -61,8 +61,8 @@ sudo apt install nginx -y
 **2. Deployment Kode**
 ```Bash
 # Clone Repository
-git clone https://github.com/Scaramousyyy/Library_API library-api
-cd library-api
+git clone https://github.com/Scaramousyyy/Library_API
+cd Library_API
 
 # Instal Dependencies Proyek
 npm install
@@ -179,4 +179,5 @@ npx prisma migrate deploy
 # 5. Restart aplikasi untuk memuat kode baru
 pm2 restart library-api
 ```
+
 
