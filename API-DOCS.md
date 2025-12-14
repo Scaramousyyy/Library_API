@@ -82,16 +82,16 @@ Berlaku untuk semua `GET` List Endpoints (e.g., `/books`, `/users`, `/loans`).
 
 | Method | Endpoint | Deskripsi | Auth? | Role Required |
 | :--- | :--- | :--- | :--- | :--- |
-| **`GET` | `/authors` | Mengambil daftar semua penulis dengan pagination/filter. | ❌ | - |
-| **`GET` | `/authors/:id` | Mengambil detail penulis berdasarkan ID. | ❌ | - |
+| **`GET`** | `/authors` | Mengambil daftar semua penulis dengan pagination/filter. | ❌ | - |
+| **`GET`** | `/authors/:id` | Mengambil detail penulis berdasarkan ID. | ❌ | - |
 | **`POST`** | `/authors` | Membuat penulis baru. | ✅ | ADMIN |
 | **`PUT`** | `/authors/:id` | Memperbarui detail penulis. | ✅ | ADMIN |
 | **`DELETE`**| `/authors/:id` | Menghapus penulis. | ✅ | ADMIN |
 
 | Method | Endpoint | Deskripsi | Auth? | Role Required |
 | :--- | :--- | :--- | :--- | :--- |
-| **`GET` | `/categories` | Mengambil daftar semua kategori dengan pagination/filter. | ❌ | - |
-| **`GET` | `/categories/:id` | LMengambil detail kategori berdasarkan ID. | ❌ | - |
+| **`GET`** | `/categories` | Mengambil daftar semua kategori dengan pagination/filter. | ❌ | - |
+| **`GET`** | `/categories/:id` | LMengambil detail kategori berdasarkan ID. | ❌ | - |
 | **`POST`** | `/categories` | Membuat kategori baru. | ✅ | ADMIN |
 | **`PUT`** | `/categories/:id` | Memperbarui detail kategori. | ✅ | ADMIN |
 | **`DELETE`**| `/categories/:id` | Menghapus kategori. | ✅ | ADMIN |
@@ -144,4 +144,5 @@ Role | Email | Password | Status Pinjaman Saat Ini | Catatan |
 | **User 3** | `user3@library.com` | `User1234` | ONGOING & LATE | Digunakan untuk menguji penanganan keterlambatan. |
 
 **Catatan Keamanan:** Password adalah *hardcoded* untuk tujuan testing, bukan password asli.
+
 
