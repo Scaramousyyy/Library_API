@@ -17,9 +17,9 @@ Detail ini harus diisi setelah _instance_ diluncurkan.
 
 | Detail | Value |
 | --- | --- |
-| **Production URL (IP)** |	`http://54.234.123.151` |
-| **Base URL API** |	`http://54.234.123.151/api` |
-| **Health Check URL** |	`http://54.234.123.151/api/health` |
+| **Production URL (IP)** |	`http://3.225.47.3` |
+| **Base URL API** |	`http://3.225.47.3/api` |
+| **Health Check URL** |	`http://3.225.47.3/api/health` |
 | **AWS Region** |	`us-east-1` |
 | **Instance ID** |	`i-0df680349f995bb9a` |
 | **Instance Type** |	`t2.micro` |
@@ -61,7 +61,7 @@ sudo apt install nginx -y
 **2. Deployment Kode**
 ```Bash
 # Clone Repository
-git clone <URL_REPO_ANDA> library-api
+git clone https://github.com/Scaramousyyy/Library_API library-api
 cd library-api
 
 # Instal Dependencies Proyek
@@ -139,9 +139,9 @@ Gunakan Postman atau _browser_ dari komputer lokal Anda untuk memverifikasi fung
 
 | Test | URL | Method | Hasil yang Diharapkan |
 | --- | --- | --- | --- |
-| **Health Check**	| http://54.234.123.151/api/health |	GET	| Status **200 OK** (Nginx dan App berjalan) |
-| **Root URL** |	http://54.234.123.151/	| GET	| Status **200 OK** (Response dasar aplikasi) |
-| **Login** |	http://54.234.123.151/api/auth/login	| POST	| Status **200 OK** dan menerima token (Database dan App Logic berjalan) |
+| **Health Check**	| http://3.225.47.3/api/health |	GET	| Status **200 OK** (Nginx dan App berjalan) |
+| **Root URL** |	http://3.225.47.3/	| GET	| Status **200 OK** (Response dasar aplikasi) |
+| **Login** |	http://3.225.47.3/api/auth/login	| POST	| Status **200 OK** dan menerima token (Database dan App Logic berjalan) |
 
 ## VI. Monitoring, Troubleshooting, dan Maintenance
 
@@ -157,7 +157,7 @@ Gunakan Postman atau _browser_ dari komputer lokal Anda untuk memverifikasi fung
 | Error |	Penyebab Paling Umum |	Solusi |
 | --- | --- | --- |
 | **502 Bad Gateway** |	Aplikasi mati/crash (PM2) atau Nginx salah konfigurasi.	| Cek `pm2 logs library-api`. Jika crash, jalankan `npx prisma generate` dan restart PM2. |
-| **404 Not Found**	| URL salah atau Nginx tidak terhubung ke Port 80.	| Pastikan Anda mengakses `http://<IP>/api/...` dan cek _symlink_ Nginx. |
+| **404 Not Found**	| URL salah atau Nginx tidak terhubung ke Port 80.	| Pastikan Anda mengakses `http://3.225.47.3/api/...` dan cek _symlink_ Nginx. |
 | **Prisma Error**	| `Prisma Client did not initialize yet...` |	Jalankan `npx prisma generate` di server EC2. |
 | **ERR_MODULE_NOT_FOUND** |	Konflik case-sensitivity di Linux (huruf besar/kecil salah). |	Perbaiki case pada import path dan filename di server, lalu `pm2 restart library-api.` |
 
@@ -179,3 +179,4 @@ npx prisma migrate deploy
 # 5. Restart aplikasi untuk memuat kode baru
 pm2 restart library-api
 ```
+
