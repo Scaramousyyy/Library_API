@@ -74,12 +74,27 @@ Berlaku untuk semua `GET` List Endpoints (e.g., `/books`, `/users`, `/loans`).
 
 | Method | Endpoint | Deskripsi | Auth? | Role Required |
 | :--- | :--- | :--- | :--- | :--- |
-| **`GET`** | `/books` | List buku dengan pagination. | ❌ | - |
-| **`POST`** | `/books` | Membuat buku baru (termasuk relasi M:M). | ✅ | ADMIN |
-| **`PUT`** | `/books/:id` | Memperbarui buku dan relasi M:M. | ✅ | ADMIN |
+| **`GET`** | `/books` | Mengambil daftar semua buku dengan pagination/filter. | ❌ | - |
+| **`GET`** | `/books/:id` | Mengambil detail buku berdasarkan ID. | ❌ | - |
+| **`POST`** | `/books` | Membuat buku baru (termasuk relasi M:M Authors/Categories). | ✅ | ADMIN |
+| **`PUT`** | `/books/:id` | Memperbarui semua data buku dan relasi M:M. | ✅ | ADMIN |
 | **`DELETE`**| `/books/:id` | Menghapus buku (Cascade Delete). | ✅ | ADMIN |
-| **`GET` | `/authors`, `/categories` | List Penulis / Kategori. | ❌ | - |
-| **`POST`** | `/authors`, `/categories` | Membuat Penulis / Kategori baru. | ✅ | ADMIN |
+
+| Method | Endpoint | Deskripsi | Auth? | Role Required |
+| :--- | :--- | :--- | :--- | :--- |
+| **`GET` | `/authors` | Mengambil daftar semua penulis dengan pagination/filter. | ❌ | - |
+| **`GET` | `/authors/:id` | Mengambil detail penulis berdasarkan ID. | ❌ | - |
+| **`POST`** | `/authors` | Membuat penulis baru. | ✅ | ADMIN |
+| **`PUT`** | `/authors/:id` | Memperbarui detail penulis. | ✅ | ADMIN |
+| **`DELETE`**| `/authors/:id` | Menghapus penulis. | ✅ | ADMIN |
+
+| Method | Endpoint | Deskripsi | Auth? | Role Required |
+| :--- | :--- | :--- | :--- | :--- |
+| **`GET` | `/categories` | Mengambil daftar semua kategori dengan pagination/filter. | ❌ | - |
+| **`GET` | `/categories/:id` | LMengambil detail kategori berdasarkan ID. | ❌ | - |
+| **`POST`** | `/categories` | Membuat kategori baru. | ✅ | ADMIN |
+| **`PUT`** | `/categories/:id` | Memperbarui detail kategori. | ✅ | ADMIN |
+| **`DELETE`**| `/categories/:id` | Menghapus kategori. | ✅ | ADMIN |
 
 ---
 
@@ -87,9 +102,10 @@ Berlaku untuk semua `GET` List Endpoints (e.g., `/books`, `/users`, `/loans`).
 
 | Method | Endpoint | Deskripsi | Auth? | Role Required |
 | :--- | :--- | :--- | :--- | :--- |
-| **`GET`** | `/copies` | List semua salinan fisik. | ❌ | - |
+| **`GET`** | `/copies` | Mengambil daftar semua salinan fisik dengan pagination/filter. | ❌ | - |
+| **`GET`** | `/copies/:id` | Mengambil detail salinan berdasarkan ID. | ❌ | - |
 | **`POST`** | `/copies` | Menambahkan salinan fisik baru (`barcode`, `bookId`). | ✅ | ADMIN |
-| **`PUT`** | `/copies/:id` | Mengubah status salinan (e.g., ke `MAINTENANCE`). | ✅ | ADMIN |
+| **`PUT`** | `/copies/:id` | Mengubah status salinan (`AVAILABLE`, `BORROWED`, `MAINTENANCE`, `LOST`). | ✅ | ADMIN |
 | **`DELETE`**| `/copies/:id` | Menghapus salinan fisik. | ✅ | ADMIN |
 
 ---
@@ -123,8 +139,9 @@ Akun-akun berikut telah dibuat via Database Seeding dan disediakan HANYA untuk t
 Role | Email | Password | Status Pinjaman Saat Ini | Catatan |
 | :--- | :--- | :--- | :--- | :--- |
 | **Admin** | `admin@library.com` | `Admin123` | N/A | Akun hak akses penuh (Create, Update, Delete). |
-| **User 1 (Active)** | `user1@library.com` | `User1234` | ONGOING | Digunakan untuk menguji pengembalian normal. |
-| **User 2 (History)** | `user2@library.com` | `User1234` | RETURNED | Pinjaman sudah selesai, digunakan untuk menguji riwayat. |
-| **User 3 (Late)** | `user3@library.com` | `User1234` | ONGOING & LATE | Digunakan untuk menguji penanganan keterlambatan. |
+| **User 1** | `user1@library.com` | `User1234` | ONGOING | Digunakan untuk menguji pengembalian normal. |
+| **User 2** | `user2@library.com` | `User1234` | RETURNED | Pinjaman sudah selesai, digunakan untuk menguji riwayat. |
+| **User 3** | `user3@library.com` | `User1234` | ONGOING & LATE | Digunakan untuk menguji penanganan keterlambatan. |
 
 **Catatan Keamanan:** Password adalah *hardcoded* untuk tujuan testing, bukan password asli.
+
