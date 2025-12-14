@@ -85,7 +85,7 @@ npx prisma generate
 npx prisma migrate deploy
 
 # Isi Data Awal (Admin, Categories, dll.)
-npx prisma db seed
+npm run seed
 ```
  
 **5. Application Start (PM2)**
@@ -179,5 +179,6 @@ npx prisma migrate deploy
 # 5. Restart aplikasi untuk memuat kode baru
 pm2 restart library-api
 ```
+
 
 
