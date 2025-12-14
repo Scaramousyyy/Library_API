@@ -8,8 +8,8 @@ Aplikasi API ini telah berhasil di-deploy ke AWS EC2 dan dikelola oleh PM2 di be
 
 | Endpoint | URL | Keterangan |
 | :--- | :--- | :--- |
-| **Base URL API** | `http://54.234.123.151/api` | Semua endpoint API dimulai dari sini. |
-| **Health Check** | `http://54.234.123.151/api/health` | Untuk mengecek status server. |
+| **Base URL API** | `http://3.225.47.3/api` | Semua endpoint API dimulai dari sini. |
+| **Health Check** | `http://3.225.47.3/api/health` | Untuk mengecek status server. |
 
 **Catatan:** URL di atas akan aktif minimal 2 minggu setelah deadline pengumpulan.
 
@@ -27,7 +27,7 @@ Ikuti langkah-langkah ini untuk menjalankan API di komputer lokal Anda:
 
 1.  **Clone Repository:**
     ```bash
-    git https://github.com/Scaramousyyy/Library_API/edit/main/README.md
+    git https://github.com/Scaramousyyy/Library_API
     cd Library_API
     ```
 
@@ -44,10 +44,11 @@ Ikuti langkah-langkah ini untuk menjalankan API di komputer lokal Anda:
     ```bash
     npx prisma generate
     npx prisma migrate dev --name init
-    npx prisma db seed
+    npm run seed
     ```
 
 5.  **Jalankan Aplikasi:**
     ```bash
     npm run dev
     ```
+
