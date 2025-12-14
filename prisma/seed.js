@@ -6,15 +6,23 @@ const prisma = new PrismaClient();
 async function main() {
     // --- 1. CLEANUP DATABASE ---
 
-    console.log("--- Starting database seeding ---");
-    await prisma.loan.deleteMany({});
-    await prisma.bookCopy.deleteMany({});
-    await prisma.book.deleteMany({});
-    await prisma.author.deleteMany({});
-    await prisma.category.deleteMany({});
-    await prisma.user.deleteMany({});
+    await prisma.$transaction([
+        prisma.loan.deleteMany({}),
+        prisma.bookCopy.deleteMany({}),
+        prisma.book.deleteMany({}),
+        prisma.author.deleteMany({}),
+        prisma.category.deleteMany({}),
+        prisma.user.deleteMany({}),
 
-    console.log("Database cleanup complete.");
+        prisma.$executeRaw`ALTER SEQUENCE "Loan_id_seq" RESTART WITH 1;`,
+        prisma.$executeRaw`ALTER SEQUENCE "BookCopy_id_seq" RESTART WITH 1;`,
+        prisma.$executeRaw`ALTER SEQUENCE "Book_id_seq" RESTART WITH 1;`,
+        prisma.$executeRaw`ALTER SEQUENCE "Author_id_seq" RESTART WITH 1;`,
+        prisma.$executeRaw`ALTER SEQUENCE "Category_id_seq" RESTART WITH 1;`,
+        prisma.$executeRaw`ALTER SEQUENCE "User_id_seq" RESTART WITH 1;`,
+    ]);
+
+    console.log("Database cleanup and sequence reset complete (ID will start from 1).");
 
 
     // --- 2. SEED USERS ---
